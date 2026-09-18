@@ -409,26 +409,26 @@
 
         // --- LÓGICA DE CRIAÇÃO DO CHAMADO ---
         document.getElementById('ticket-form').addEventListener('submit', async function(e) {
-    e.preventDefault();
+            e.preventDefault();
 
-    const requesterInput = document.getElementById('ticket_requester').value;
-    const subjectInput = document.getElementById('ticket_subject').value;
-    const categoryInput = document.getElementById('ticket_category').value; // Captura a categoria
-    const areaInput = document.getElementById('ticket_area').value;
-    const detailsInput = document.getElementById('ticket_details').value;
-    
-    const btn = document.getElementById('submit-ticket-btn');
-    const spinner = document.getElementById('ticket-spinner');
-    const messageDiv = document.getElementById('ticket-message');
+            const requesterInput = document.getElementById('ticket_requester').value;
+            const subjectInput = document.getElementById('ticket_subject').value;
+            const categoryInput = document.getElementById('ticket_category').value;
+            const areaInput = document.getElementById('ticket_area').value;
+            const detailsInput = document.getElementById('ticket_details').value;
+            
+            const btn = document.getElementById('submit-ticket-btn');
+            const spinner = document.getElementById('ticket-spinner');
+            const messageDiv = document.getElementById('ticket-message');
 
-    const ticketData = {
-        id_solicitante: requesterInput,
-        assunto: subjectInput,
-        categoria: categoryInput, // Incluído no payload JSON
-        area: areaInput,
-        detalhes: detailsInput,
-        data_solicitacao: new Date().toISOString()
-    };
+            const ticketData = {
+                id_solicitante: requesterInput,
+                assunto: subjectInput,
+                categoria: categoryInput,
+                area: areaInput,
+                detalhes: detailsInput,
+                data_solicitacao: new Date().toISOString()
+            };
 
             btn.disabled = true;
             spinner.style.display = 'block';
@@ -445,8 +445,11 @@
 
                 if (response.status === 200) {
                     showFeedback(messageDiv, '✅ Chamado criado com sucesso! Sua solicitação foi enviada para a equipe de dados.', 'success');
+                    
+                    // Reseta todos os campos do formulário mantendo o solicitante
                     document.getElementById('ticket_subject').value = '';
                     document.getElementById('ticket_area').value = '';
+                    document.getElementById('ticket_category').value = '';
                     document.getElementById('ticket_details').value = '';
                 } else {
                     showFeedback(messageDiv, `❌ Não foi possível criar o chamado. Código de erro: ${response.status}`, 'error');
@@ -456,6 +459,7 @@
                 console.error('Erro na criação:', error);
                 showFeedback(messageDiv, '❌ Erro ao comunicar com o servidor. Tente novamente.', 'error');
             } finally {
+                // Mantém a sessão ativa e pronto para envio de novo chamado
                 btn.disabled = false;
                 spinner.style.display = 'none';
                 btn.textContent = 'ABRIR CHAMADO';
