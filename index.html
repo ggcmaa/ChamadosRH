@@ -301,13 +301,13 @@
                 <div class="form-group">
                     <label for="ticket_category">Categoria</label>
                     <select id="ticket_category" required>
-                    <option value="" disabled selected>Selecione a categoria...</option>
-                    <option value="Chamados">Chamados</option>
-                    <option value="GEROT">GEROT</option>
-                    <option value="Projetos">Projetos</option>
-                    <option value="Dúvidas">Dúvidas</option>
-                    <option value="Problemas">Problemas</option>
-                    <option value="Acoes Tematicas">Ações Temáticas</option>
+                        <option value="" disabled selected>Selecione a categoria...</option>
+                        <option value="Chamados">Chamados</option>
+                        <option value="GEROT">GEROT</option>
+                        <option value="Projetos">Projetos</option>
+                        <option value="Dúvidas">Dúvidas</option>
+                        <option value="Problemas">Problemas</option>
+                        <option value="Acoes Tematicas">Ações Temáticas</option>
                     </select>
                 </div>
 
@@ -403,8 +403,21 @@
             currentUser = null;
             document.getElementById('username').value = '';
             document.getElementById('password').value = '';
+            
+            // Oculta mensagem de feedback ao sair
+            const messageDiv = document.getElementById('ticket-message');
+            messageDiv.style.display = 'none';
+
             document.getElementById('ticket-screen').style.display = 'none';
             document.getElementById('login-screen').style.display = 'flex';
+        });
+
+        // Oculta a mensagem de sucesso/erro assim que o usuário digita/altera algo no formulário
+        document.getElementById('ticket-form').addEventListener('input', function() {
+            const messageDiv = document.getElementById('ticket-message');
+            if (messageDiv.style.display === 'block') {
+                messageDiv.style.display = 'none';
+            }
         });
 
         // --- LÓGICA DE CRIAÇÃO DO CHAMADO ---
@@ -446,11 +459,9 @@
                 if (response.status === 200) {
                     showFeedback(messageDiv, '✅ Chamado criado com sucesso! Sua solicitação foi enviada para a equipe de dados.', 'success');
                     
-                    // Reseta todos os campos do formulário mantendo o solicitante
-                    document.getElementById('ticket_subject').value = '';
-                    document.getElementById('ticket_area').value = '';
-                    document.getElementById('ticket_category').value = '';
-                    document.getElementById('ticket_details').value = '';
+                    // Reseta os campos do formulário para o padrão mantendo o usuário
+                    document.getElementById('ticket-form').reset();
+                    document.getElementById('ticket_requester').value = currentUser;
                 } else {
                     showFeedback(messageDiv, `❌ Não foi possível criar o chamado. Código de erro: ${response.status}`, 'error');
                 }
