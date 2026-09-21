@@ -4,11 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal de Dados CMAA - Chamados</title>
-    <!-- Fonte profissional do Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
     
     <style>
-        /* --- ESTILOS GERAIS --- */
         :root {
             --primary-color: #0d1117; 
             --green-dark: #1b853a;   
@@ -34,7 +32,6 @@
             transition: all 0.3s ease;
         }
 
-        /* --- CONTAINER PRINCIPAL --- */
         .portal-container {
             width: 90%;
             max-width: 500px;
@@ -57,7 +54,6 @@
             background: var(--accent-gradient);
         }
 
-        /* --- TELA DE LOGIN --- */
         #login-screen {
             display: flex;
             flex-direction: column;
@@ -79,7 +75,6 @@
             text-align: center;
         }
 
-        /* --- TELA DO FORMULÁRIO (CHAMADOS) --- */
         #ticket-screen {
             display: none;
             flex-direction: column;
@@ -122,7 +117,6 @@
             color: #ddd;
         }
 
-        /* --- COMPONENTES DE FORMULÁRIO COMUNS --- */
         .form-group {
             width: 100%;
             margin-bottom: 20px;
@@ -158,7 +152,6 @@
             color: rgba(240, 246, 252, 0.3);
         }
 
-        /* --- BOTÃO PRINCIPAL COM GRADIENTE CMAA --- */
         .btn-submit {
             width: 100%;
             padding: 18px;
@@ -170,7 +163,9 @@
             border-radius: 8px;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
-            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             background: var(--accent-gradient);
             background-size: 200% 100%;
             background-position: left center;
@@ -189,15 +184,14 @@
             box-shadow: none !important;
         }
 
-        /* --- FEEDBACK VISUAL --- */
         .loading-spinner {
             display: none;
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             border: 3px solid rgba(255,255,255,0.3);
             border-radius: 50%;
             border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
+            animation: spin 1s linear infinite;
             margin-right: 10px;
         }
 
@@ -246,7 +240,7 @@
         
         <!-- 1. TELA DE LOGIN -->
         <section id="login-screen">
-            <img src="CMAA.png" alt="CMAA Logo - Energia que transforma" class="logo-login">
+            <img src="CMAA.png" alt="CMAA Logo" class="logo-login">
             <h2 class="login-title">Acesso Restrito: Área de Dados</h2>
             
             <div class="form-group">
@@ -259,9 +253,9 @@
                 <input type="password" id="password" placeholder="******" inputmode="numeric" pattern="[0-9]*" required>
             </div>
             
-            <button id="login-btn" class="btn-submit">
+            <button id="login-btn" type="button" class="btn-submit">
                 <div class="loading-spinner" id="login-spinner"></div>
-                ACESSAR PORTAL
+                <span id="login-btn-text">ACESSAR PORTAL</span>
             </button>
             
             <div class="feedback-message" id="login-message"></div>
@@ -273,11 +267,11 @@
                 <img src="CMAA.png" alt="CMAA Logo" class="logo-header">
                 <div>
                     <span id="user-greeting" class="welcome-msg">Portal de Chamados</span>
-                    <button id="logout-btn">Sair</button>
+                    <button id="logout-btn" type="button">Sair</button>
                 </div>
             </header>
             
-            <form id="ticket-form">
+            <form id="ticket-form" onsubmit="return false;">
                 <div class="form-group">
                     <label for="ticket_requester">Solicitante</label>
                     <input type="text" id="ticket_requester" readonly style="color: #666; cursor: not-allowed;">
@@ -318,7 +312,7 @@
                 
                 <button type="submit" id="submit-ticket-btn" class="btn-submit">
                     <div class="loading-spinner" id="ticket-spinner"></div>
-                    ABRIR CHAMADO
+                    <span id="ticket-btn-text">ABRIR CHAMADO</span>
                 </button>
             </form>
             
@@ -333,11 +327,12 @@
 
         let currentUser = null;
 
-        // --- LÓGICA DE LOGIN ---
+        // --- LOGIN ---
         document.getElementById('login-btn').addEventListener('click', async function() {
             const usernameInput = document.getElementById('username').value.trim();
             const passwordRaw = document.getElementById('password').value.trim();
             const btn = document.getElementById('login-btn');
+            const btnText = document.getElementById('login-btn-text');
             const spinner = document.getElementById('login-spinner');
             const messageDiv = document.getElementById('login-message');
 
@@ -350,26 +345,20 @@
             }
 
             const passwordInt = parseInt(passwordRaw, 10);
-
             if (isNaN(passwordInt)) {
                 showFeedback(messageDiv, 'A senha deve conter apenas números inteiros.', 'error');
                 return;
             }
 
-            const loginData = {
-                username: usernameInput,
-                password: passwordInt
-            };
-
             btn.disabled = true;
-            spinner.style.display = 'block';
-            btn.textContent = 'Autenticando...';
+            spinner.style.display = 'inline-block';
+            btnText.textContent = 'Autenticando...';
 
             try {
                 const response = await fetch(LOGIN_API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(loginData)
+                    body: JSON.stringify({ username: usernameInput, password: passwordInt })
                 });
 
                 if (response.status === 200) {
@@ -378,16 +367,15 @@
                 } else if (response.status === 400) {
                     showFeedback(messageDiv, 'Usuário ou senha incorretos (Erro 400).', 'error');
                 } else {
-                    showFeedback(messageDiv, `Erro ao autenticar. Código de resposta: ${response.status}`, 'error');
+                    showFeedback(messageDiv, `Erro ao autenticar. Código: ${response.status}`, 'error');
                 }
-
             } catch (error) {
                 console.error('Erro no login:', error);
                 showFeedback(messageDiv, 'Erro ao comunicar com a API de autenticação.', 'error');
             } finally {
                 btn.disabled = false;
                 spinner.style.display = 'none';
-                btn.textContent = 'ACESSAR PORTAL';
+                btnText.textContent = 'ACESSAR PORTAL';
             }
         });
 
@@ -403,34 +391,28 @@
             currentUser = null;
             document.getElementById('username').value = '';
             document.getElementById('password').value = '';
-            
-            // Oculta mensagem de feedback ao sair
-            const messageDiv = document.getElementById('ticket-message');
-            messageDiv.style.display = 'none';
-
+            document.getElementById('ticket-message').style.display = 'none';
             document.getElementById('ticket-screen').style.display = 'none';
             document.getElementById('login-screen').style.display = 'flex';
         });
 
-        // Oculta a mensagem de sucesso/erro assim que o usuário digita/altera algo no formulário
+        // Esconde o feedback quando o usuário recomeça a digitar
         document.getElementById('ticket-form').addEventListener('input', function() {
-            const messageDiv = document.getElementById('ticket-message');
-            if (messageDiv.style.display === 'block') {
-                messageDiv.style.display = 'none';
-            }
+            document.getElementById('ticket-message').style.display = 'none';
         });
 
-        // --- LÓGICA DE CRIAÇÃO DO CHAMADO ---
+        // --- ENVIAR CHAMADO ---
         document.getElementById('ticket-form').addEventListener('submit', async function(e) {
             e.preventDefault();
 
             const requesterInput = document.getElementById('ticket_requester').value;
-            const subjectInput = document.getElementById('ticket_subject').value;
+            const subjectInput = document.getElementById('ticket_subject').value.trim();
             const categoryInput = document.getElementById('ticket_category').value;
             const areaInput = document.getElementById('ticket_area').value;
-            const detailsInput = document.getElementById('ticket_details').value;
+            const detailsInput = document.getElementById('ticket_details').value.trim();
             
             const btn = document.getElementById('submit-ticket-btn');
+            const btnText = document.getElementById('ticket-btn-text');
             const spinner = document.getElementById('ticket-spinner');
             const messageDiv = document.getElementById('ticket-message');
 
@@ -443,9 +425,10 @@
                 data_solicitacao: new Date().toISOString()
             };
 
+            // Atualiza UI para estado de carregamento
             btn.disabled = true;
-            spinner.style.display = 'block';
-            btn.textContent = 'Criando chamado...';
+            spinner.style.display = 'inline-block';
+            btnText.textContent = 'Criando chamado...';
             messageDiv.className = 'feedback-message';
             messageDiv.style.display = 'none';
 
@@ -457,23 +440,22 @@
                 });
 
                 if (response.status === 200) {
-                    showFeedback(messageDiv, '✅ Chamado criado com sucesso! Sua solicitação foi enviada para a equipe de dados.', 'success');
+                    showFeedback(messageDiv, '✅ Chamado criado com sucesso!', 'success');
                     
-                    // Reseta os campos do formulário para o padrão mantendo o usuário
+                    // Limpa o formulário e restaura o usuário solicitante
                     document.getElementById('ticket-form').reset();
                     document.getElementById('ticket_requester').value = currentUser;
                 } else {
-                    showFeedback(messageDiv, `❌ Não foi possível criar o chamado. Código de erro: ${response.status}`, 'error');
+                    showFeedback(messageDiv, `❌ Não foi possível criar o chamado. Código: ${response.status}`, 'error');
                 }
-
             } catch (error) {
                 console.error('Erro na criação:', error);
-                showFeedback(messageDiv, '❌ Erro ao comunicar com o servidor. Tente novamente.', 'error');
+                showFeedback(messageDiv, '❌ Erro ao comunicar com o servidor.', 'error');
             } finally {
-                // Mantém a sessão ativa e pronto para envio de novo chamado
+                // Restaura o botão independente de dar sucesso ou erro
                 btn.disabled = false;
                 spinner.style.display = 'none';
-                btn.textContent = 'ABRIR CHAMADO';
+                btnText.textContent = 'ABRIR CHAMADO';
             }
         });
 
